@@ -1,12 +1,9 @@
 <?php
 
-exec('php -f failover.php > /dev/null &');
-
-echo "starting node and wait for 5 sec...\n";
-sleep(5);
-
+$max_api_attemps = 0;
 
 function client_call(){
+	global $max_api_attemps;
 	echo "try calling api...\n";
 	$curl = curl_init();
 	curl_setopt_array($curl, array(
@@ -21,7 +18,11 @@ function client_call(){
 	$result = curl_exec($curl);
 
 	if(curl_errno($curl)){
-	    return client_call();
+	    if ($max_api_attemps < 35000){
+	    	$max_api_attemps++;
+	    	return client_call();	
+	    }
+	    
 	}
 	else{
         	echo "API results...\n".$result;
@@ -42,6 +43,3 @@ exec('pkill -x node');
 client_call();
 echo "\n";
 
-
-
-exec('pkill -9 php');
